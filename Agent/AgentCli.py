@@ -16,54 +16,47 @@ def run_agent(user_input, tools_schema, available_tools, model_name = "deepseek-
     print(f"用户请求：{user_input}")
 
     # --- 进入 ReAct 循环 ---
-    # 第一次调用 LLM：看看它是否想使用工具
-    response = client.chat.completions.create(
-        model=model_name, # 或者 "deepseek-reasoner"
-        messages=messages,
-        tools=tools_schema, 
-    )
-
-    # 获取 LLM 的第一轮回复消息
-    assistant_msg = response.choices[0].message
-    print(f"LLM回复：{assistant_msg.content}")
-
-    # 判断 LLM 是否想要调用工具 (Tool Calls)
-    if assistant_msg.tool_calls:
-        print(f"Agent 思考: 我需要调用工具 -> {assistant_msg.tool_calls[0].function.name}")
-        # 必须把 LLM "想调用工具" 的这条意图加入历史，否则它会忘记
-        messages.append(assistant_msg)
-
-        # 执行工具
-        for tool_call in assistant_msg.tool_calls:
-            # 解析函数名和参数
-            tool_name = tool_call.function.name
-            tool_args = json.loads(tool_call.function.arguments)
-
-            # 从我们的函数字典里找到对应的 Python 函数
-            func_to_call = available_tools[tool_name]
-
-            try:
-                func_result = func_to_call(**tool_args)
-                print(f"工具 {tool_name} 返回: {func_result}")
-
-            except Exception as e:
-                func_result = f"工具执行出错：{str(e)}"
-
-            messages.append({
-                "role": "tool",
-                "content": str(func_result),
-                "tool_call_id": tool_call.id,
-            })
-
-        #  第二次调用 LLM：让它根据工具结果生成最终人话
-        final_response = client.chat.completions.create(
-            model=model_name,
-            messages=messages
+    while True:
+        # 获取 LLM 的回复消息
+        response = client.chat.completions.create(
+            model=model_name, # 或者 "deepseek-reasoner"
+            messages=messages,
+            tools=tools_schema, 
         )
-        return final_response.choices[0].message.content
-    else:
-        # 如果 LLM 觉得不需要调用工具，直接返回它的回复
-        return assistant_msg.content
+
+        assistant_msg = response.choices[0].message
+        print(f"LLM回复：{assistant_msg.content}")
+
+        # 判断 LLM 是否想要调用工具 (Tool Calls)
+        if assistant_msg.tool_calls:
+            print(f"Agent 思考: 我需要调用工具 -> {assistant_msg.tool_calls[0].function.name}")
+            # 必须把 LLM "想调用工具" 的这条意图加入历史，否则它会忘记
+            messages.append(assistant_msg)
+
+            # 执行工具
+            for tool_call in assistant_msg.tool_calls:
+                # 解析函数名和参数
+                tool_name = tool_call.function.name
+                tool_args = json.loads(tool_call.function.arguments)
+
+                # 从我们的函数字典里找到对应的 Python 函数
+                func_to_call = available_tools[tool_name]
+
+                try:
+                    func_result = func_to_call(**tool_args)
+                    print(f"工具 {tool_name} 返回: {func_result}")
+
+                except Exception as e:
+                    func_result = f"工具执行出错：{str(e)}"
+
+                messages.append({
+                    "role": "tool",
+                    "content": str(func_result),
+                    "tool_call_id": tool_call.id,
+                })
+        else:
+            # 如果 LLM 觉得不需要调用工具，直接返回它的回复
+            return assistant_msg.content
 
 def chat_loop(tools_schema, available_tools, model_name = "deepseek-chat"):
     # System Prompt 只需要初始化一次
