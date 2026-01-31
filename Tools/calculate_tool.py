@@ -1,3 +1,5 @@
+from Tools.ToolManager import tool_manager
+
 
 def calculate_tool_info():
     return {
@@ -26,6 +28,7 @@ def calculate_tool_info():
         }
     }
 
+@tool_manager.register_tool(calculate_tool_info())
 def calculate(num1, num2, operation):
     if operation == "add":
         return num1 + num2

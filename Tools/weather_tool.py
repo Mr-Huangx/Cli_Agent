@@ -1,3 +1,4 @@
+from Tools.ToolManager import tool_manager
 
 
 def get_weather_tool_info():
@@ -19,6 +20,7 @@ def get_weather_tool_info():
         }
     }
 
+@tool_manager.register_tool(get_weather_tool_info())
 def get_weather(city: str):
     """模拟天气数据，在实际使用过程中，这里需要替换为Requests去请求天气的API"""
     weather_data = {

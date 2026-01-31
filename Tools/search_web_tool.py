@@ -1,4 +1,5 @@
 from tavily import TavilyClient
+from Tools.ToolManager import tool_manager
 
 tavily_client = TavilyClient(api_key="Your Tavily API Key")
 
@@ -21,6 +22,7 @@ def search_web_tool_info():
         },
     }
 
+@tool_manager.register_tool(search_web_tool_info())
 def search_web(query):
     """
     当用户询问当前发生的事件、需要查阅最新的网络信息或你不确定的知识时，使用此工具。
