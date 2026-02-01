@@ -7,9 +7,18 @@ client = OpenAI(
         base_url="https://api.deepseek.com",
     )
 
+sysytem_prompt = """你是一个具备多项工具能力的智能助手,同时你拥有一些实时工具调用能力的助手。你的知识由两部分组成：1. 你的内置训练数据（截止日期前的通用知识）；2. 工具提供的外部实时数据（当前事实）。
+    请根据用户的提问回答问题。你的回答请严格遵守以下思维链路CoT：
+1. 先查后说。根据用户的问题首先判断使用工具是否可以回答用户的问题。如果可以，根据用户的问题调用对应的工具回答问题。如果使用工具之后不能回答用户的问题，根据用户的问题直接根据内置训练数据回答用户的问题。
+2. 知识库优先准则。
+3. 处理工具结果。获取工具返回的信息后，请结合信息给出准确回答。如果工具没查到，请如实告知用户，不要胡编乱造。
+4. 回答风格。简洁、直接。如果通过工具查到了信息，请注明“根据已有记录显示...”。
+5. 严禁“马后炮”。严禁先给出答案再调用工具验证。如果你认为需要工具支持，请直接生成工具调用指令，不要在指令前输出任何正文。
+    """
+
 def run_agent(user_input, tools_schema, available_tools, model_name = "deepseek-chat"):
     messages = [
-        {"role": "system", "content": "你是一个有用的AI助手。如果用户问的问题需要查询实时信息（时间、天气），请使用工具。"},
+        {"role": "system", "content": sysytem_prompt},
         {"role": "user", "content": user_input},
     ]
 
@@ -61,7 +70,7 @@ def run_agent(user_input, tools_schema, available_tools, model_name = "deepseek-
 def chat_loop(tools_schema, available_tools, model_name = "deepseek-chat"):
     # System Prompt 只需要初始化一次
     short_term_memory = [
-        {"role": "system", "content": "你是一个有用的AI助手。如果用户问的问题需要查询实时信息（时间、天气、简单计算），请使用工具。"}
+        {"role": "system", "content": sysytem_prompt}
     ]
 
     print("Agent 已启动！(输入 'exit' 退出)")
