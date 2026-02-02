@@ -14,7 +14,7 @@ def search_local_knowledge_info():
         "type": "function",
         "function": {
             "name": "query_knowledge_base",
-            "description": "当用户询问关于公司内部资料、私有文档或特定业务知识时使用此工具。",
+            "description": "当用户询问关于公司内部资料、私有文档、特定业务知识时或任何属于用户私有、内部、非公开的信息时，必须且只能先使用此工具。只有当此工具明确返回‘未找到’时，才考虑使用其他工具或者其他方式解决。",
             "parameters": {
                 "type": "object",
                 "properties": {
