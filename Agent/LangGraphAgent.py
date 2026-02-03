@@ -6,6 +6,8 @@ from langchain_core.tools import StructuredTool
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
+from langgraph.checkpoint.memory import MemorySaver
+
 
 # 定义状态类型
 class AgentState(TypedDict):
@@ -79,7 +81,9 @@ class MyLangGraphAgent:
         )
         workflow.add_edge("action", "agent")
 
-        return workflow.compile()
+        # 在 build_graph 之前
+        memory = MemorySaver()
+        return workflow.compile(checkpointer=memory) 
 
     def run(self, prompt: str):
         """流式运行接口"""
